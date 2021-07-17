@@ -1,0 +1,26 @@
+{
+  "name": "node-api-masterclass-course",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "NODE_ENF=production node server",
+    "dev": "nodemon server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AhmedBelal15/node-api-masterclass-course.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AhmedBelal15/node-api-masterclass-course/issues"
+  },
+  "homepage": "https://github.com/AhmedBelal15/node-api-masterclass-course#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1"
+  }
+}
