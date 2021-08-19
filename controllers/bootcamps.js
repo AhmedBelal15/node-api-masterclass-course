@@ -2,10 +2,11 @@ const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middlewares/asyncHandler");
 const geocoder = require("../utils/geocoder");
 const Bootcamp = require("../models/Bootcamp");
-
-//@desc         Create new bootcamp
-//@route        POST /api/v1/bootcamps
-//@access       Private
+/** 
+ * @desc         Create new bootcamp
+ * @route        POST /api/v1/bootcamps
+ * @access       Private
+*/
 exports.createBootcamp = asyncHandler(async (req, res, next) => {
   const bootcamp = await Bootcamp.create(req.body);
   res.status(201).json({
@@ -18,11 +19,72 @@ exports.createBootcamp = asyncHandler(async (req, res, next) => {
 //@route        GET /api/v1/bootcamps
 //@access       Public
 exports.getBootcamps = asyncHandler(async (req, res, next) => {
-  const bootcamps = await Bootcamp.find();
+  let query;
+
+  // Copy req.query
+  const reqQuery = { ...req.query };
+
+  // Fields to exclude
+  const removeFields = ["select", "sort", "page", "limit"];
+  removeFields.forEach((param) => delete reqQuery[param]);
+
+  // Create query string
+  let queryStr = JSON.stringify(reqQuery);
+
+  // Create Operators (gt, gte , etc)
+  queryStr = queryStr.replace(
+    /\b(gt|gte|lt|lte|in)\b/g,
+    (match) => `$${match}`
+  );
+  queryStr = JSON.parse(queryStr);
+  query = Bootcamp.find(queryStr);
+
+  // Select Fields
+  if (req.query.select) {
+    const fields = req.query.select.split(",").join(" ");
+    query = query.select(fields);
+  }
+
+  // Sort
+  if (req.query.sort) {
+    const sortBy = req.query.sort.split(",").join(" ");
+    query = query.sort(sortBy);
+  } else {
+    query = query.sort("-createdAt");
+  }
+
+  // Pagination
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 25;
+  const startIndex = (page - 1) * limit;
+  const endIndex = page * limit;
+  const total = await Bootcamp.countDocuments();
+
+  query = query.skip(startIndex).limit(limit);
+
+  // Finding resource
+  const bootcamps = await query;
+
+  // pagination result
+  const pagination = {};
+  if (endIndex < total) {
+    pagination.next = {
+      page: page + 1,
+      limit,
+    };
+  }
+  if (startIndex > 0) {
+    pagination.prev = {
+      page: page - 1,
+      limit,
+    };
+  }
+
   res.status(200).json({
     success: true,
-    data: bootcamps,
     count: bootcamps.length,
+    pagination,
+    data: bootcamps,
   });
 });
 
@@ -106,6 +168,6 @@ exports.getBoocampsInRadius = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     count: bootcamps.length,
-    data: bootcamps
-  })
+    data: bootcamps,
+  });
 });
