@@ -4,7 +4,7 @@ const User = require("../models/User");
 
 /**
  * @desc         Register User
- * @route        POST /api/v1/register
+ * @route        POST /api/v1/auth/register
  * @access       Public
  */
 exports.register = asyncHandler(async (req, res, next) => {
@@ -24,7 +24,7 @@ exports.register = asyncHandler(async (req, res, next) => {
 
 /**
  * @desc         Login User
- * @route        POST /api/v1/login
+ * @route        POST /api/v1/auth/login
  * @access       Public
  */
 exports.login = asyncHandler(async (req, res, next) => {
@@ -51,7 +51,7 @@ exports.login = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse("Invalid Credentials", 401));
   }
 
-  sendTokenResponse(user, 200, res)
+  sendTokenResponse(user, 200, res);
 });
 
 //Get token from model, create cookie and send response
@@ -66,8 +66,8 @@ const sendTokenResponse = (user, statusCode, res) => {
     httpOnly: true,
   };
 
-  if(process.env.NODE_ENV === 'production'){
-    options.secure = true
+  if (process.env.NODE_ENV === "production") {
+    options.secure = true;
   }
 
   res
@@ -75,3 +75,16 @@ const sendTokenResponse = (user, statusCode, res) => {
     .cookie("token", token, options)
     .json({ success: true, token });
 };
+
+/**
+ * @desc         Get current logged in user
+ * @route        POST /api/v1/auth/me
+ * @access       Private
+ */
+
+exports.getMe = asyncHandler(async (req, res, next) => {
+  res.status(200).json({
+    success: true,
+    data: req.user,
+  });
+});
