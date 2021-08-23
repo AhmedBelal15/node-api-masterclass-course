@@ -65,18 +65,30 @@ exports.getBootcamp = asyncHandler(async (req, res, next) => {
 //@access       Private
 
 exports.updateBootcamp = asyncHandler(async (req, res, next) => {
-  const errorMessage = new ErrorResponse(
-    `Bootcamp not found with id of ${req.params.id}`,
-    404
-  );
-  const bootcamp = await Bootcamp.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
+  const bootcamp = await Bootcamp.findBy(req.params.id);
   if (!bootcamp) {
-    return next(errorMessage);
+    return next(
+      new ErrorResponse(`Bootcamp not found with id of ${req.params.id}`, 404)
+    );
   }
-  res.status(200).json({ success: true, data: bootcamp });
+  //Make sure user is the bootcamp owner
+  if (String(bootcamp.user) !== req.user.id && req.user.role !== "admin") {
+    return next(
+      new ErrorResponse(
+        `User ${req.user.id} is not authorized to update this bootcamp`,
+        401
+      )
+    );
+  }
+  const updatedBootcamp = await Bootcamp.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+  res.status(200).json({ success: true, data: updatedBootcamp });
 });
 
 //@desc         Delete bootcamp
@@ -92,6 +104,17 @@ exports.deleteBootcamp = asyncHandler(async (req, res, next) => {
   if (!bootcamp) {
     return next(errorMessage);
   }
+
+  //Make sure user is the bootcamp owner
+  if (String(bootcamp.user) !== req.user.id && req.user.role !== "admin") {
+    return next(
+      new ErrorResponse(
+        `User ${req.user.id} is not authorized to delete this bootcamp`,
+        401
+      )
+    );
+  }
+
   bootcamp.remove();
   res.status(200).json({ success: true, data: {} });
 });
@@ -138,6 +161,15 @@ exports.bootcampPhotoUpload = asyncHandler(async (req, res, next) => {
     );
   }
 
+//Make sure user is the bootcamp owner
+if (String(bootcamp.user) !== req.user.id && req.user.role !== "admin") {
+  return next(
+    new ErrorResponse(
+      `User ${req.user.id} is not authorized to update this bootcamp`,
+      401
+    )
+  );
+}
   if (!req.files) {
     return next(new ErrorResponse(`Please upload a file`, 400));
   }
