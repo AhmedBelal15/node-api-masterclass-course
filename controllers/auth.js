@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middlewares/asyncHandler");
 const sendEmail = require("../utils/sendEmail");
@@ -69,6 +70,28 @@ exports.getMe = asyncHandler(async (req, res, next) => {
 });
 
 /**
+ * @desc         Update user details
+ * @route        PUT /api/v1/auth/updatedetails
+ * @access       Private
+ */
+
+exports.updateDetails = asyncHandler(async (req, res, next) => {
+  const fieldsToUpdate = {
+    name: req.body.name,
+    email: req.body.email,
+  };
+
+  const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
+    new: true,
+    runValidators: true,
+  });
+  res.status(200).json({
+    success: true,
+    data: user,
+  });
+});
+
+/**
  * @desc         Forgot password
  * @route        POST /api/v1/auth/forgotpassword
  * @access       Public
@@ -93,7 +116,7 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
   // Create reset url
   const resetUrl = `${req.protocol}://${req.get(
     "host"
-  )}/api/v1/resetPassword/${resetToken}`;
+  )}/api/v1/auth/resetpassword/${resetToken}`;
 
   const message = `Please make a request to ${resetUrl}`;
 
@@ -116,6 +139,37 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 
     next(new ErrorResponse("Email could not be sent", 500));
   }
+});
+
+/**
+ * @desc         Reset Password
+ * @route        PUT /api/v1/auth/resetpassword/:resettoken
+ * @access       Public
+ */
+
+exports.resetPassword = asyncHandler(async (req, res, next) => {
+  //Get Hashed token
+  const resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(req.params.resettoken)
+    .digest("hex");
+  const user = await User.findOne({
+    resetPasswordToken,
+    resetPasswordExpire: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(new ErrorResponse("Invalid Token", 400));
+  }
+
+  // Set new password
+  user.password = req.body.password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+
+  await user.save();
+
+  sendTokenResponse(user, 200, res);
 });
 
 //Get token from model, create cookie and send response
