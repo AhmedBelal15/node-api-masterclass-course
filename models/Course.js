@@ -39,7 +39,7 @@ const CourseSchema = new mongoose.Schema(
       required: true,
     },
   },
-  { timeStamps: true }
+  { timestamps: true }
 );
 
 // Static method to get avg of course tuitions

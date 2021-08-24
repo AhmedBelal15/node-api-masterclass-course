@@ -32,7 +32,7 @@ const UserSchema = new mongoose.Schema(
     resetPasswordToken: String,
     resetPasswordExpire: Date,
   },
-  { timeStamps: true }
+  { timestamps: true }
 );
 
 // Encrypt Password using bcrypt
