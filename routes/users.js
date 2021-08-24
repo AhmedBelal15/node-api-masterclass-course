@@ -9,8 +9,8 @@ const {
 
 const User = require("../models/User");
 
-const advancedResults = require("../middlewares/advancedResults");
-const { protect, authorize } = require("../middlewares/auth");
+const advancedResults = require("../middleware/advancedResults");
+const { protect, authorize } = require("../middleware/auth");
 
 const router = express.Router();
 

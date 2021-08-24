@@ -1,5 +1,5 @@
 const ErrorResponse = require("../utils/errorResponse");
-const asyncHandler = require("../middlewares/asyncHandler");
+const asyncHandler = require("../middleware/asyncHandler");
 const Course = require("../models/Course");
 const Bootcamp = require("../models/Bootcamp");
 
