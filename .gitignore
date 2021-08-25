@@ -105,6 +105,3 @@ dist
 
 #config
 config/config.env
-
-#public
-public
